@@ -1,0 +1,3 @@
+# MineSweeper
+
+#### copyright Thomas Vandeputte
