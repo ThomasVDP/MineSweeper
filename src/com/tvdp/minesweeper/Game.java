@@ -53,7 +53,7 @@ public class Game implements Runnable
 		handler = new Handler(this);
 		gameCamera = new GameCamera(handler, 0, 0);
 		
-		gameState = new GameState(handler, 100, 100, 1000);
+		gameState = new GameState(handler, 30, 30, 70);
 		State.setState(gameState);
 	}
 	
@@ -87,7 +87,6 @@ public class Game implements Runnable
 		g.dispose();
 	}
 
-	@Override
 	public void run()
 	{
 		init();

@@ -13,8 +13,8 @@ public class BoardCreator
 	
 	public static void setTileWidth(int screenWidth, int screenHeight, int boardWidth, int boardHeight)
 	{
-		TILE_WIDTH = (int)(screenWidth / (boardWidth + 2));
-		TILE_HEIGHT = (int)(screenHeight / (boardHeight + 2));
+		TILE_WIDTH = (int)(screenWidth / boardWidth);
+		TILE_HEIGHT = (int)(screenHeight / boardHeight);
 		if (TILE_WIDTH < 32 || TILE_HEIGHT < 32)
 		{
 			TILE_WIDTH = 32;
@@ -45,6 +45,8 @@ public class BoardCreator
 				tiles[i][j] = new Tile(0, false);
 			}
 		}
+		
+		handler.getGameCamera().move(this.width * BoardCreator.TILE_WIDTH / 2 - handler.getWidth() / 2, this.height * BoardCreator.TILE_HEIGHT / 2 - handler.getHeight() / 2);
 	}
 	
 	public void placeBombs()
@@ -86,36 +88,30 @@ public class BoardCreator
 	
 	public void draw(Graphics g, int screenWidth, int screenHeight)
 	{	
-		int offsetX = (int)(screenWidth / 2 - this.width * BoardCreator.TILE_WIDTH / 2 - handler.getGameCamera().getXOffset());
-		int offsetY = (int)(screenHeight / 2 - this.height * BoardCreator.TILE_WIDTH / 2 - handler.getGameCamera().getYOffset());
-		
-		int xStart = (int)Math.max(0, (handler.getGameCamera().getXOffset() - (2 * BoardCreator.TILE_WIDTH)) / BoardCreator.TILE_WIDTH);
-		int xEnd = width;
-		int yStart = (int)Math.max(0, (handler.getGameCamera().getYOffset() - (2 * BoardCreator.TILE_HEIGHT)) / BoardCreator.TILE_HEIGHT);
-		int yEnd = height;
+		int xStart = (int)Math.max(0, handler.getGameCamera().getXOffset() / BoardCreator.TILE_WIDTH);
+		int xEnd = (int)Math.min(width, (handler.getGameCamera().getXOffset() + handler.getWidth()) / BoardCreator.TILE_WIDTH + 1);
+		int yStart = (int)Math.max(0, handler.getGameCamera().getYOffset() / BoardCreator.TILE_HEIGHT);
+		int yEnd = (int)Math.min(height, (handler.getGameCamera().getYOffset() + handler.getHeight()) / BoardCreator.TILE_HEIGHT + 1);
 				
 		for (int i = yStart; i < yEnd; ++i)
 		{
 			for (int j = xStart; j < xEnd; ++j)
 			{
-				getTile(j, i).draw(g, j * BoardCreator.TILE_WIDTH + offsetX, i * BoardCreator.TILE_WIDTH + offsetY);
+				getTile(j, i).draw(g, (int)(j * BoardCreator.TILE_WIDTH - handler.getGameCamera().getXOffset()), (int)(i * BoardCreator.TILE_HEIGHT - handler.getGameCamera().getYOffset()));
 				getTile(j, i).setPos(j, i);
 			}
 		}
 	}
 	
 	public void handleMouseLeft(int screenWidth, int screenHeight, MouseManager mouse, int mouseX, int mouseY)
-	{
-		int offsetX = (int)(screenWidth / 2 - this.width * BoardCreator.TILE_WIDTH / 2 - handler.getGameCamera().getXOffset());
-		int offsetY = (int)(screenHeight / 2 - this.height * BoardCreator.TILE_WIDTH / 2 - handler.getGameCamera().getYOffset());
-		
+	{	
 		for (int i = 0; i < height; ++i)
 		{
 			for (int j = 0; j < width; j++)
 			{	
-				if (mouseX >= getTile(j, i).getPos()[0] * BoardCreator.TILE_WIDTH + offsetX && mouseX <= getTile(j, i).getPos()[0] * BoardCreator.TILE_WIDTH + offsetX + BoardCreator.TILE_WIDTH)
+				if (mouseX >= (int)(getTile(j, i).getPos()[0] * BoardCreator.TILE_WIDTH - handler.getGameCamera().getXOffset()) && mouseX <= (int)(getTile(j, i).getPos()[0] * BoardCreator.TILE_WIDTH - handler.getGameCamera().getXOffset()) + BoardCreator.TILE_WIDTH)
 				{
-					if (mouseY >= getTile(j, i).getPos()[1] * BoardCreator.TILE_WIDTH + offsetY && mouseY <= getTile(j, i).getPos()[1] * BoardCreator.TILE_WIDTH + offsetY + BoardCreator.TILE_WIDTH)
+					if (mouseY >= (int)(getTile(j, i).getPos()[1] * BoardCreator.TILE_WIDTH - handler.getGameCamera().getYOffset()) && mouseY <= (int)(getTile(j, i).getPos()[1] * BoardCreator.TILE_WIDTH - handler.getGameCamera().getYOffset()) + BoardCreator.TILE_WIDTH)
 					{
 						if (!getTile(j, i).isFlagged() && !getTile(j, i).getState())
 						{
@@ -134,17 +130,14 @@ public class BoardCreator
 	}
 	
 	public void handleMouseRight(int screenWidth, int screenHeight, MouseManager mouse, int mouseX, int mouseY)
-	{
-		int offsetX = (int)(screenWidth / 2 - this.width * BoardCreator.TILE_WIDTH / 2 - handler.getGameCamera().getXOffset());
-		int offsetY = (int)(screenHeight / 2 - this.height * BoardCreator.TILE_WIDTH / 2 - handler.getGameCamera().getYOffset());
-		
+	{	
 		for (int i = 0; i < height; ++i)
 		{
 			for (int j = 0; j < width; j++)
 			{	
-				if (mouseX >= getTile(j, i).getPos()[0] * BoardCreator.TILE_WIDTH + offsetX && mouseX <= getTile(j, i).getPos()[0] * BoardCreator.TILE_WIDTH + offsetX + BoardCreator.TILE_WIDTH)
+				if (mouseX >= (int)(getTile(j, i).getPos()[0] * BoardCreator.TILE_WIDTH - handler.getGameCamera().getXOffset()) && mouseX <= (int)(getTile(j, i).getPos()[0] * BoardCreator.TILE_WIDTH - handler.getGameCamera().getXOffset()) + BoardCreator.TILE_WIDTH)
 				{
-					if (mouseY >= getTile(j, i).getPos()[1] * BoardCreator.TILE_WIDTH + offsetY && mouseY <= getTile(j, i).getPos()[1] * BoardCreator.TILE_WIDTH + offsetY + BoardCreator.TILE_WIDTH)
+					if (mouseY >= (int)(getTile(j, i).getPos()[1] * BoardCreator.TILE_WIDTH - handler.getGameCamera().getYOffset()) && mouseY <= (int)(getTile(j, i).getPos()[1] * BoardCreator.TILE_WIDTH - handler.getGameCamera().getYOffset()) + BoardCreator.TILE_WIDTH)
 					{
 						if (!getTile(j, i).getState())
 						{
@@ -163,103 +156,110 @@ public class BoardCreator
 	
 	private void removeAround(int i, int j)
 	{
-		if (!(i + 1 > height || j + 1 > width))
+		if (getTile(j, i) == null)
 		{
-			if (i > 0 && j < width)
+			return;
+		}
+		if (!(getTile(j, i - 1) == null))
+		{
+			Tile tile = getTile(j, i - 1);
+			if(!tile.getState())
 			{
-				if (!tiles[i - 1][j].getState())
+				tile.setState(true);
+				if (tile.getValue() == 0)
 				{
-					tiles[i - 1][j].setState(true);
-					if (tiles[i - 1][j].getValue() == 0)
-					{
-						removeAround(i - 1, j);
-					}
+					removeAround(i - 1, j);
 				}
 			}
-			if (i > 0 && j > 0)
+		}
+		
+		if (!(getTile(j - 1, i - 1) == null))
+		{
+			Tile tile = getTile(j - 1, i - 1);
+			if(!tile.getState())
 			{
-				if(!tiles[i - 1][j - 1].getState())
+				tile.setState(true);
+				if (tile.getValue() == 0)
 				{
-					tiles[i - 1][j - 1].setState(true);
-	
-					if (tiles[i - 1][j - 1].getValue() == 0)
-					{
-						removeAround(i - 1, j - 1);
-					}
+					removeAround(i - 1, j - 1);
 				}
 			}
-			if (i > 0 && j + 1 < tiles.length)
+		}
+		
+		if (!(getTile(j - 1, i) == null))
+		{
+			Tile tile = getTile(j - 1, i);
+			if(!tile.getState())
 			{
-				if(!tiles[i - 1][j + 1].getState())
+				tile.setState(true);
+				if (tile.getValue() == 0)
 				{
-					tiles[i - 1][j + 1].setState(true);
-	
-					if (tiles[i - 1][j + 1].getValue() == 0)
-					{
-						removeAround(i - 1, j + 1);
-					}
+					removeAround(i, j - 1);
 				}
 			}
-			if (i + 1 < tiles.length && j < width)
+		}
+		
+		if (!(getTile(j, i + 1) == null))
+		{
+			Tile tile = getTile(j, i + 1);
+			if(!tile.getState())
 			{
-				if(!tiles[i + 1][j].getState())
+				tile.setState(true);
+				if (tile.getValue() == 0)
 				{
-					tiles[i + 1][j].setState(true);
-	
-					if (tiles[i + 1][j].getValue() == 0)
-					{
-						removeAround(i + 1, j);
-					}
+					removeAround(i + 1, j);
 				}
 			}
-			if (i + 1 < tiles.length && j + 1 < tiles.length)
+		}
+		
+		if (!(getTile(j + 1, i + 1) == null))
+		{
+			Tile tile = getTile(j + 1, i + 1);
+			if(!tile.getState())
 			{
-				if(!tiles[i + 1][j + 1].getState())
+				tile.setState(true);
+				if (tile.getValue() == 0)
 				{
-					tiles[i + 1][j + 1].setState(true);
-	
-					if (tiles[i + 1][j + 1].getValue() == 0)
-					{
-						removeAround(i + 1, j + 1);
-					}
+					removeAround(i + 1, j + 1);
 				}
 			}
-			if (i + 1 < tiles.length && j > 0)
+		}
+		
+		if (!(getTile(j + 1, i) == null))
+		{
+			Tile tile = getTile(j + 1, i);
+			if(!tile.getState())
 			{
-				if(!tiles[i + 1][j - 1].getState())
+				tile.setState(true);
+				if (tile.getValue() == 0)
 				{
-					tiles[i + 1][j - 1].setState(true);
-	
-					if (tiles[i + 1][j - 1].getValue() == 0)
-					{
-						removeAround(i + 1, j - 1);
-					}
+					removeAround(i, j + 1);
 				}
 			}
-			if (j > 0)
+		}
+		
+		if (!(getTile(j - 1, i + 1) == null))
+		{
+			Tile tile = getTile(j - 1, i + 1);
+			if(!tile.getState())
 			{
-				if(!tiles[i][j - 1].getState())
+				tile.setState(true);
+				if (tile.getValue() == 0)
 				{
-	
-					System.out.println("left: " + tiles[i][j - 1].getValue());
-					tiles[i][j - 1].setState(true);
-	
-					if (tiles[i][j - 1].getValue() == 0)
-					{
-						removeAround(i, j - 1);
-					}
+					removeAround(i + 1, j - 1);
 				}
 			}
-			if (j + 1 < tiles.length)
+		}
+		
+		if (!(getTile(j + 1, i - 1) == null))
+		{
+			Tile tile = getTile(j + 1, i - 1);
+			if(!tile.getState())
 			{
-				if(!tiles[i][j + 1].getState())
+				tile.setState(true);
+				if (tile.getValue() == 0)
 				{
-					tiles[i][j + 1].setState(true);
-	
-					if (tiles[i][j + 1].getValue() == 0)
-					{
-						removeAround(i, j + 1);
-					}
+					removeAround(i - 1, j + 1);
 				}
 			}
 		}

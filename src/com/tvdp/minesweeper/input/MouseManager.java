@@ -8,20 +8,17 @@ public class MouseManager implements MouseListener
 	private boolean leftClicked, rightClicked;
 	private int mouseX, mouseY;
 	
-	@Override
 	public void mouseClicked(MouseEvent e)
 	{
 		
 	}
 
-	@Override
 	public void mousePressed(MouseEvent e)
 	{
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
 	public void mouseReleased(MouseEvent e)
 	{
 		if (e.getButton() == MouseEvent.BUTTON1)
@@ -34,14 +31,12 @@ public class MouseManager implements MouseListener
 		mouseY = e.getY();
 	}
 
-	@Override
 	public void mouseEntered(MouseEvent e)
 	{
 		// TODO Auto-generated method stub
 		
 	}
 
-	@Override
 	public void mouseExited(MouseEvent e)
 	{
 		// TODO Auto-generated method stub
